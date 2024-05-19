@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 require("dotenv").config();
-// const { chats } = require("./data/data");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 
 app.use(express.json());
@@ -41,7 +40,6 @@ const io = require("socket.io")(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("Connected to socket.io server");
 
   socket.on("setup", (userData) => {
     socket.join(userData._id);
@@ -50,7 +48,6 @@ io.on("connection", (socket) => {
 
   socket.on("join chat", (room) => {
     socket.join(room);
-    console.log("User joined room: " + room);
   });
 
   socket.on("typing", (room) => socket.in(room).emit("typing"));

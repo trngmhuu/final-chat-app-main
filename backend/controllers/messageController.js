@@ -65,7 +65,74 @@ const allMessages = asyncHandler(async (req, res) => {
   }
 });
 
+// const deleteMessage = asyncHandler(async (req, res) => {
+//   const messageId = req.params.messageId;
 
+//   try {
+//     // Kiểm tra xem tin nhắn tồn tại không
+//     const message = await Message.findById(messageId);
+//     if (!message) {
+//       res.status(404);
+//       throw new Error("Không tìm thấy tin nhắn");
+//     }
+
+//     if (message.sender.toString() !== req.user._id.toString()) {
+//       // Lấy danh sách người nhận từ tin nhắn
+//       let receiverIds = message.receiver;
+
+//       // Loại bỏ id của người dùng khỏi danh sách người nhận
+//       const userIndex = receiverIds.indexOf(req.user._id.toString());
+//       if (userIndex !== -1) {
+//         receiverIds.splice(userIndex, 1);
+//       }
+
+//       // Cập nhật tin nhắn với danh sách người nhận mới
+//       await Message.findByIdAndUpdate(messageId, { receiver: receiverIds });
+//     }
+//     else
+//     {
+//       await Message.findByIdAndDelete(messageId);
+//     }
+
+//     res.json({ message: "Xóa tin nhắn thành công" });
+//   } catch (error) {
+//     res.status(400);
+//     throw new Error(error.message);
+//   }
+// });
+
+// Gỡ tin nhắn
+const removeReceiver = asyncHandler(async (req, res) => {
+  const messageId = req.params.messageId;
+
+  try {
+    // Kiểm tra xem tin nhắn tồn tại không
+    const message = await Message.findById(messageId);
+    if (!message) {
+      res.status(404);
+      throw new Error("Không tìm thấy tin nhắn");
+    }
+
+    // Lấy danh sách người nhận từ tin nhắn
+    let receiverIds = message.receiver;
+
+    // Loại bỏ id của người dùng khỏi danh sách người nhận
+    const userIndex = receiverIds.indexOf(req.user._id.toString());
+    if (userIndex !== -1) {
+      receiverIds.splice(userIndex, 1);
+    }
+
+    // Cập nhật tin nhắn với danh sách người nhận mới
+    await Message.findByIdAndUpdate(messageId, { receiver: receiverIds });
+
+    res.json({ message: "Gỡ người nhận khỏi tin nhắn thành công" });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+// Xóa tin nhắn
 const deleteMessage = asyncHandler(async (req, res) => {
   const messageId = req.params.messageId;
 
@@ -77,30 +144,22 @@ const deleteMessage = asyncHandler(async (req, res) => {
       throw new Error("Không tìm thấy tin nhắn");
     }
 
+    // Kiểm tra xem người dùng có phải là người gửi không
     if (message.sender.toString() !== req.user._id.toString()) {
-      // Lấy danh sách người nhận từ tin nhắn
-      let receiverIds = message.receiver;
-
-      // Loại bỏ id của người dùng khỏi danh sách người nhận
-      const userIndex = receiverIds.indexOf(req.user._id.toString());
-      if (userIndex !== -1) {
-        receiverIds.splice(userIndex, 1);
-      }
-
-      // Cập nhật tin nhắn với danh sách người nhận mới
-      await Message.findByIdAndUpdate(messageId, { receiver: receiverIds });
-    }
-    else
-    {
-      await Message.findByIdAndDelete(messageId);
+      res.status(403);
+      throw new Error("Bạn không có quyền thu hồi tin nhắn này");
     }
 
-    res.json({ message: "Xóa tin nhắn thành công" });
+    // Xóa tin nhắn
+    await Message.findByIdAndDelete(messageId);
+
+    res.json({ message: "Thu hồi tin nhắn thành công" });
   } catch (error) {
     res.status(400);
     throw new Error(error.message);
   }
 });
+
 
 
 //xử lý gửi file ,vs message
@@ -113,26 +172,25 @@ const uploadFile = asyncHandler(async (req, res) => {
     return res.sendStatus(400);
   }
 
-  var newMessage = {
-    sender: req.user._id,
-    content: "Đã gửi một file",
-    file: {
-      fileName: file.originalname,
-      filePath: file.path,
-    },
-    chat: chatId,
-  };
+  // Lưu file vào thư mục uploads trên server
+  const filePath = `/uploads/${file.filename}`;
 
   try {
-    var message = await Message.create(newMessage);
-    res.json(message);
+    // Tạo tin nhắn mới chứa đường dẫn của file
+    const message = await Message.create({
+      sender: req.user._id,
+      content: filePath,
+      chat: chatId,
+    });
+
+    res.json({ filePath }); // Trả về đường dẫn của file cho client
   } catch (error) {
     res.status(400);
     throw new Error(error.message);
   }
 });
 
-const replayMessage = asyncHandler(async (req, res) => {
+const replyMessage = asyncHandler(async (req, res) => {
   const { content, originalMessageId } = req.body;
 
   if (!content || !originalMessageId) {
@@ -168,4 +226,4 @@ const replayMessage = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { sendMessage, allMessages, deleteMessage, uploadFile, replayMessage };
+module.exports = { sendMessage, allMessages, deleteMessage, uploadFile, replyMessage, removeReceiver };

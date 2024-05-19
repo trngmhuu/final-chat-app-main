@@ -179,6 +179,7 @@ const ScrollableChat = ({ messages, fetchMessages, setMessages }) => {
                     messages={messages}
                     fetchMessages={fetchMessages}
                     setMessages={setMessages}
+                    messageSenderId={m.sender._id}
                   />
 
                   <FaReply

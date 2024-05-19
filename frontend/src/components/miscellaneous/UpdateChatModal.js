@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -16,14 +16,7 @@ import axios from "axios";
 import { ChatState } from "../../Context/ChatProvider";
 import io from "socket.io-client";
 
-const UpdateChatModal = ({
-  messageId,
-  fetchMessages,
-  fetchAgain,
-  setFetchAgain,
-  onDelete,
-  updateMessages,
-}) => {
+const UpdateChatModal = ({ messageId, messageSenderId, fetchMessages, chatId, fetchAgain, setFetchAgain }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -37,47 +30,7 @@ const UpdateChatModal = ({
     setIsOpen(false);
   };
 
-  // const handleDeleteGroupChat = async () => {
-  //   // Kiểm tra xem selectedChat có tồn tại không
-  //   if (!selectedChat) {
-  //     toast({
-  //       title: "Không có nhóm chat được chọn",
-  //       status: "error",
-  //       duration: 5000,
-  //       isClosable: true,
-  //       position: "bottom",
-  //     });
-  //     return;
-  //   }
-  
-  //   try {
-  //     const config = {
-  //       headers: {
-  //         Authorization: `Bearer ${user.token}`,
-  //       },
-  //     };
-  //     const { data } = await axios.delete(`/api/chat/${selectedChat._id}`, config);
-  //     toast({
-  //       title: data.message,
-  //       status: "success",
-  //       duration: 5000,
-  //       isClosable: true,
-  //       position: "bottom",
-  //     });
-  //     setFetchAgain(!fetchAgain);
-  //   } catch (error) {
-  //     toast({
-  //       title: "Đã có lỗi xảy ra!",
-  //       description: error.response.data.message,
-  //       status: "error",
-  //       duration: 5000,
-  //       isClosable: true,
-  //       position: "bottom",
-  //     });
-  //   }
-  // };
-  
-  const handleDeleteMessage = async () => {
+  const handleDeleteMessage = async (action) => {
     try {
       setLoading(true);
       const config = {
@@ -85,21 +38,29 @@ const UpdateChatModal = ({
           Authorization: `Bearer ${user.token}`,
         },
       };
-      console.log("Message ID:", messageId); // Log the messageId
-      console.log("Config:", config); // Log the config object
-      const response = await axios.delete(`/api/message/${messageId}`, config);
-      console.log("Response:", response); // Log the response object
+      let response;
+      if (action === 'delete') {
+        response = await axios.delete(`/api/message/${messageId}`, config);
+      } else if (action === 'removeReceiver') {
+        response = await axios.put(`/api/message/remove-receiver/${messageId}`, {}, config);
+      }
       setLoading(false);
-      
-      
+      fetchMessages();
       const socket = io("http://localhost:5000");
       socket.emit("messageDeleted", messageId);
       handleClose();
-      
-    }catch (error) {
+      toast({
+        title: "Success",
+        description: action === 'delete' ? "Message deleted successfully" : "Message hidden successfully",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } catch (error) {
       const errorMessage = error.response?.data?.message || "Unknown error occurred";
       toast({
-        title: "Đã có lỗi xảy ra!",
+        title: "Error",
         description: errorMessage,
         status: "error",
         duration: 5000,
@@ -109,6 +70,8 @@ const UpdateChatModal = ({
       setLoading(false);
     }
   };
+
+  
 
   return (
     <>
@@ -121,18 +84,47 @@ const UpdateChatModal = ({
       <Modal onClose={handleClose} isOpen={isOpen} isCentered>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Cảnh báo</ModalHeader>
+          <ModalHeader>Xác nhận xóa</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>Bạn có chắc chắn muốn xóa tin nhắn này?</ModalBody>
+          <ModalBody>
+            {messageSenderId === user._id ? (
+              <>
+                <p>Bạn muốn gỡ tin nhắn này ở phía ai?</p>
+                <Button
+                  colorScheme="red"
+                  mt={4}
+                  onClick={() => handleDeleteMessage('delete')}
+                  isLoading={loading}
+                  width="50%"
+                >
+                  Thu hồi tin nhắn
+                </Button>
+                <Button
+                  colorScheme="yellow"
+                  mt={4}
+                  onClick={() => handleDeleteMessage('removeReceiver')}
+                  isLoading={loading}
+                  width="50%"
+                >
+                  Gỡ ở phía bạn
+                </Button>
+              </>
+            ) : (
+              <>
+                <p>Tin nhắn này sẽ được gỡ khỏi thiết bị của bạn?</p>
+                <Button
+                  colorScheme="yellow"
+                  mt={4}
+                  onClick={() => handleDeleteMessage('removeReceiver')}
+                  isLoading={loading}
+                  width="100%"
+                >
+                  Gỡ ở phía bạn
+                </Button>
+              </>
+            )}
+          </ModalBody>
           <ModalFooter>
-            <Button
-              colorScheme="red"
-              mr={3}
-              onClick={handleDeleteMessage}
-              isLoading={loading}
-            >
-              Xác nhận
-            </Button>
             <Button variant="ghost" onClick={handleClose}>
               Hủy
             </Button>
