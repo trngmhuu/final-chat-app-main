@@ -11,7 +11,7 @@ const connectDB = require("./config/db");
 connectDB();
 
 //------- Cấu hình CORS
-const whitelist = ['http://localhost:3000', 'https://zola-0wcg.onrender.com'];
+const whitelist = ['http://localhost:3000', 'https://zola-09dw.onrender.com'];
 const corsOptions = {
   origin: (origin, callback) => {
     if (whitelist.indexOf(origin) !== -1 || !origin) {
@@ -65,7 +65,6 @@ const io = require("socket.io")(server, {
   cors: {
     origin: whitelist,
     methods: ["GET", "POST"],
-    allowedHeaders: ["my-custom-header"],
     credentials: true
   },
 });
