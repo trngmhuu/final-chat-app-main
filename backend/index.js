@@ -3,16 +3,30 @@ const app = express();
 require("dotenv").config();
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 const path = require("path");
-
-app.use(express.json());
-
+const cors = require("cors");
 const colors = require("colors");
 
 //------- Kết nối CSDL
 const connectDB = require("./config/db");
 connectDB();
 
+//------- Cấu hình CORS
+const whitelist = ['http://localhost:3000', 'https://zola-0wcg.onrender.com'];
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+};
+
+app.use(cors(corsOptions));
+
 //------- Định nghĩa các Route
+app.use(express.json());
+
 const userRoute = require("./routes/userRoute");
 app.use("/api/user/", userRoute);
 
@@ -21,6 +35,7 @@ app.use("/api/chat", chatRoute);
 
 const messageRoute = require("./routes/messageRoute");
 app.use("/api/message", messageRoute);
+
 //------- Deploy
 const __dirname1 = path.resolve();
 if (process.env.NODE_ENV === "production") {
@@ -28,11 +43,10 @@ if (process.env.NODE_ENV === "production") {
   app.get("*", (req, res) => {
     res.sendFile(path.resolve(__dirname1, "../frontend", "build", "index.html"));
   });
-}
-else {
+} else {
   app.get("/", (req, res) => {
     res.send("API is running successfully");
-  })
+  });
 }
 
 //-------
@@ -49,7 +63,10 @@ const server = app.listen(port, () =>
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
   cors: {
-    origin: "http://localhost:3000",
+    origin: whitelist,
+    methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
   },
 });
 
@@ -76,41 +93,27 @@ io.on("connection", (socket) => {
   });
 
   socket.on("messageDeleted", (messageId) => {
-    // Phát lại sự kiện cho tất cả các client khác
     socket.broadcast.emit("messageDeleted", messageId);
   });
 
-  // Lắng nghe yêu cầu reply từ client
-
   socket.on("send reply", async (data) => {
     try {
-      // Handle saving reply message to database here...
-
-      // After saving to database, broadcast the reply message to relevant users
       io.emit("reply received", data);
     } catch (error) {
       console.error("Error handling reply message:", error);
     }
   });
 
-  // Lắng nghe sự kiện xóa GroupChat từ client
   socket.on("groupDeleted", (chatId) => {
-    // Phát lại sự kiện xóa GroupChat tới tất cả các client khác
     socket.broadcast.emit("groupDeleted received", chatId);
   });
 
-  // Trên phía máy chủ, lắng nghe sự kiện "new group" từ client
   socket.on("new group", (newGroup) => {
-    // Phát lại sự kiện cho tất cả các client khác
     socket.broadcast.emit("new group created", newGroup);
   });
 
-  //renameGroup:
   socket.on("rename group", async (data) => {
     try {
-      // Handle saving reply message to database here...
-
-      // After saving to database, broadcast the reply message to relevant users
       io.emit("renameGroup received", data);
     } catch (error) {
       console.error("Error handling reply message:", error);
