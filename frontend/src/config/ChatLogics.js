@@ -38,9 +38,15 @@ export const isSameUser = (messages, m, i) => {
 };
 
 export const getSender = (loggedUser, users) => {
-  return users[0]?._id === loggedUser?._id ? users[1].name : users[0].name;
+  if (!users || users.length < 2) {
+    return "Người gửi không xác định"; // Giá trị dự phòng nếu mảng users không như mong đợi
+  }
+  return users[0]?._id === loggedUser?._id ? users[1]?.name || "Người gửi không xác định" : users[0]?.name || "Người gửi không xác định";
 };
 
 export const getSenderFull = (loggedUser, users) => {
-  return users[0]._id === loggedUser._id ? users[1] : users[0];
+  if (!users || users.length < 2) {
+    return null; // Giá trị dự phòng nếu mảng users không như mong đợi
+  }
+  return users[0]?._id === loggedUser?._id ? users[1] || {} : users[0] || {};
 };
