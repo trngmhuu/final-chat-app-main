@@ -37,6 +37,53 @@ const ProfileModal = ({ user, children }) => {
     setUserData({ ...userData, [e.target.name]: e.target.value });
   };
 
+  const postDetails = (pics) => {
+    setLoading(true);
+    if (pics === undefined) {
+      toast({
+        title: "Chưa chọn ảnh đại diện",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      return;
+    }
+    if (
+      pics.type === "image/jpg" ||
+      pics.type === "image/jpeg" ||
+      pics.type === "image/png"
+    ) {
+      const data = new FormData();
+      data.append("file", pics);
+      data.append("upload_preset", "zola-chat-app");
+      data.append("cloud_name", "ddw5ifo2x");
+      fetch("https://api.cloudinary.com/v1_1/ddw5ifo2x/image/upload", {
+        method: "post",
+        body: data,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setUserData({ ...userData, pic: data.url.toString() });
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error(err);
+          setLoading(false);
+        });
+    } else {
+      toast({
+        title: "Chỉ chọn file theo định dạng png, jpg, jpeg",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setLoading(false);
+      return;
+    }
+  };
+
   const updateUser = async () => {
     try {
       setLoading(true);
@@ -103,7 +150,7 @@ const ProfileModal = ({ user, children }) => {
             <Image
               borderRadius="full"
               boxSize="150px"
-              src={user.pic}
+              src={userData.pic}
               alt={user.name}
             />
             {isEditing ? (
@@ -131,6 +178,16 @@ const ProfileModal = ({ user, children }) => {
                   type="password"
                   value={userData.password}
                   onChange={handleChange}
+                  mt={4}
+                />
+                <Text fontSize={{ base: "28px", md: "30px" }} fontFamily="Work sans" mt={4}>
+                  Chỉnh sửa ảnh đại diện
+                </Text>
+                <Input
+                  type="file"
+                  p={1.5}
+                  accept="image/*"
+                  onChange={(e) => postDetails(e.target.files[0])}
                   mt={4}
                 />
               </>

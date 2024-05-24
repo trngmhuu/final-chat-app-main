@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
+const path = require("path");
 
 app.use(express.json());
 
@@ -20,8 +21,21 @@ app.use("/api/chat", chatRoute);
 
 const messageRoute = require("./routes/messageRoute");
 app.use("/api/message", messageRoute);
-//-------
+//------- Deploy
+const __dirname1 = path.resolve();
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname1, "../frontend/build")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname1, "../frontend", "build", "index.html"));
+  });
+}
+else {
+  app.get("/", (req, res) => {
+    res.send("API is running successfully");
+  })
+}
 
+//-------
 app.use(notFound);
 app.use(errorHandler);
 
@@ -40,7 +54,6 @@ const io = require("socket.io")(server, {
 });
 
 io.on("connection", (socket) => {
-
   socket.on("setup", (userData) => {
     socket.join(userData._id);
     socket.emit("connected");
@@ -81,10 +94,16 @@ io.on("connection", (socket) => {
   });
 
   // Lắng nghe sự kiện xóa GroupChat từ client
-socket.on("groupDeleted", (chatId) => {
-  // Phát lại sự kiện xóa GroupChat tới tất cả các client khác
-  socket.broadcast.emit("groupDeleted received", chatId);
-});
+  socket.on("groupDeleted", (chatId) => {
+    // Phát lại sự kiện xóa GroupChat tới tất cả các client khác
+    socket.broadcast.emit("groupDeleted received", chatId);
+  });
+
+  // Trên phía máy chủ, lắng nghe sự kiện "new group" từ client
+  socket.on("new group", (newGroup) => {
+    // Phát lại sự kiện cho tất cả các client khác
+    socket.broadcast.emit("new group created", newGroup);
+  });
 
   //renameGroup:
   socket.on("rename group", async (data) => {

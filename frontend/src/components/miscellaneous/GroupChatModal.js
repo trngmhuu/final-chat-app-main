@@ -14,10 +14,12 @@ import {
   Box,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChatState } from "../../Context/ChatProvider";
 import UserBadgeItem from "../UserAvatar/UserBadgeItem";
 import UserListItem from "../UserAvatar/UserListItem";
+import { io } from "socket.io-client";
+const socket = io("http://localhost:5000");
 
 const GroupChatModal = ({ children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -76,13 +78,39 @@ const GroupChatModal = ({ children }) => {
     setSelectedUsers(selectedUsers.filter((sel) => sel._id !== delUser._id));
   };
 
+
+  //Thông báo trong chat để hiển thị nhóm
+  //nhưng chưa thông báo được mà làm thành socket tạo nhóm
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("new group created", (newGroup) => {
+      setChats((prevChats) => [newGroup, ...prevChats]);
+      // Hiển thị thông báo khi nhóm chat mới được tạo
+      const message = `Bạn đã được thêm vào một nhóm!`;
+      toast({
+        title: "Nhóm chat mới",
+        description: message,
+        status: "info",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    });
+
+    return () => socket.off("new group created");
+  }, [socket, user.name, setChats, toast]);
+
+
+  
+
   const handleSubmit = async () => {
     if (!groupChatName || !selectedUsers) {
       toast({
         title: "Vui lòng nhập đầy đủ thông tin",
         status: "warning",
         duration: 5000,
-        isClosable: true,
+isClosable: true,
         position: "top",
       });
       return;
@@ -94,6 +122,7 @@ const GroupChatModal = ({ children }) => {
           Authorization: `Bearer ${user.token}`,
         },
       };
+       // Code tạo nhóm trò chuyện
       const { data } = await axios.post(
         `/api/chat/group`,
         {
@@ -102,6 +131,9 @@ const GroupChatModal = ({ children }) => {
         },
         config
       );
+      // Gửi sự kiện socket khi nhóm trò chuyện mới được tạo thành công
+      socket.emit("new group", data);
+      // Code cập nhật giao diện sau khi tạo nhóm trò chuyện thành công
       setChats([data, ...chats]);
       onClose();
       toast({
@@ -122,6 +154,7 @@ const GroupChatModal = ({ children }) => {
       });
     }
   };
+
 
   return (
     <>
@@ -181,7 +214,7 @@ const GroupChatModal = ({ children }) => {
           <ModalFooter>
             <Button onClick={handleSubmit} colorScheme="blue">
               Tạo nhóm
-            </Button>
+</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
