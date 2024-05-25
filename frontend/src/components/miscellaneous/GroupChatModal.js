@@ -182,7 +182,7 @@ isClosable: true,
             </FormControl>
             <FormControl>
               <Input
-                placeholder="Nhập họ tên hoặc email"
+                placeholder="Nhập họ tên hoặc số điện thoại"
                 mb={1}
                 onChange={(e) => handleSearch(e.target.value)}
               />

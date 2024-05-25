@@ -33,8 +33,6 @@ import { Effect } from "react-notification-badge";
 import NotificationBadge from "react-notification-badge/lib/components/NotificationBadge";
 import FriendRequestModal from "./FriendRequestModal";
 
-
-
 function SideDrawer() {
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
@@ -97,7 +95,7 @@ function SideDrawer() {
   const handleSearch = async () => {
     if (!search) {
       toast({
-        title: "Nhập email hoặc họ tên để tìm kiếm",
+        title: "Nhập số điện thoại hoặc họ tên để tìm kiếm",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -150,7 +148,7 @@ function SideDrawer() {
       onClose();
     } catch (error) {
       toast({
-        title: "Error fetching the chat",
+        title: "Không thể tải các tin nhắn",
         description: error.message,
         status: "error",
         duration: 5000,
@@ -323,7 +321,7 @@ function SideDrawer() {
           <DrawerBody>
             <Box display="flex" pb={2}>
               <Input
-                placeholder="Tìm theo tên hoặc email"
+                placeholder="Tìm theo tên hoặc số điện thoại"
                 mr={2}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

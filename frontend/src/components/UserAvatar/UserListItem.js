@@ -73,6 +73,10 @@ const UserListItem = ({ user, handleFunction }) => {
           <b>Email : </b>
           {user.email}
         </Text>
+        <Text fontSize="xs">
+          <b>Phone: </b>
+          {user.phoneNumber}
+        </Text>
 
            {/* Hiển thị nút chỉ khi yêu cầu chưa được gửi */}
       {!isRequestSent && (
