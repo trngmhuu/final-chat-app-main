@@ -156,7 +156,7 @@ function Signup() {
         "http://localhost:5000/api/user/",
         { name, email, phoneNumber, password, pic },
         config
-      );      
+      );
       toast({
         title: "Đăng ký thành công",
         status: "success",
