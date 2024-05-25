@@ -26,8 +26,6 @@ app.use(cors({
   origin: 'https://zola-3q9b.onrender.com',
 }));
 
-app.use(cors(corsOptions));
-
 //------- Định nghĩa các Route
 app.use(express.json());
 
