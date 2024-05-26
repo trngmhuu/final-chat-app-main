@@ -51,7 +51,7 @@ const UpdateChatModal = ({ messageId, messageSenderId, fetchMessages, chatId, fe
       handleClose();
       toast({
         title: "Success",
-        description: action === 'delete' ? "Message deleted successfully" : "Message hidden successfully",
+        description: action === 'delete' ? "Xóa tin nhắn thành công" : "Ẩn tin nhắn thành công",
         status: "success",
         duration: 5000,
         isClosable: true,
