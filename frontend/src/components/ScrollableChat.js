@@ -90,8 +90,16 @@ const ScrollableChat = ({ messages, fetchMessages, setMessages }) => {
         },
       };
 
+      // const { data } = await axios.post(
+      //   "http://localhost:5000/api/message/reply",
+      //   {
+      //     content: replyMessage,
+      //     originalMessageId: originalMessage._id, // ID của tin nhắn gốc
+      //   },
+      //   config
+      // );
       const { data } = await axios.post(
-        "http://localhost:5000/api/message/reply",
+        "/api/message/reply",
         {
           content: replyMessage,
           originalMessageId: originalMessage._id, // ID của tin nhắn gốc
