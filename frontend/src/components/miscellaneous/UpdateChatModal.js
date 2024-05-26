@@ -71,8 +71,6 @@ const UpdateChatModal = ({ messageId, messageSenderId, fetchMessages, chatId, fe
     }
   };
 
-  
-
   return (
     <>
       <IconButton
