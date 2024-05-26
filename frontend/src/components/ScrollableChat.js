@@ -91,7 +91,7 @@ const ScrollableChat = ({ messages, fetchMessages, setMessages }) => {
       };
 
       const { data } = await axios.post(
-        "/api/message/replay",
+        "http://localhost:5000/api/message/reply",
         {
           content: replyMessage,
           originalMessageId: originalMessage._id, // ID của tin nhắn gốc
