@@ -152,8 +152,13 @@ function Signup() {
           "Content-type": "application/json",
         },
       };
+      // const { data } = await axios.post(
+      //   "http://localhost:5000/api/user/",
+      //   { name, email, phoneNumber, password, pic },
+      //   config
+      // );
       const { data } = await axios.post(
-        "http://localhost:5000/api/user/",
+        "/api/user/",
         { name, email, phoneNumber, password, pic },
         config
       );
